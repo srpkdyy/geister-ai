@@ -1,2 +1,2 @@
-# geister-ai
-GeisterゲームをDQNで解く
+# Geister Ai
+GeisterゲームのAIを作る
