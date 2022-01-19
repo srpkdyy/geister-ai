@@ -4,8 +4,10 @@ import numpy as np
 class Board:
     WIDTH = 6
     MAX_IDX = 36
+
+    GOAL = (-6, -1)
+    ESCAPED = 56
     TOMB = 63
-    GOAL = 56
 
     def __init__(self, red, pos):
         PLAYER_NUM = 2
@@ -19,7 +21,7 @@ class Board:
             (+1,),
             (+Board.WIDTH,))
 
-        # Blue: False, Red: True; [A,...,h]
+        # Blue: False, Red: True; [[A,...,H], [a,...,h]]
         self.red = np.zeros(PLAYER_NUM * PIECE_NUM, dtype=bool)
         self.red[red] = True
         self.red = self.red.reshape(PLAYER_NUM, PIECE_NUM)
@@ -43,7 +45,8 @@ class Board:
     def swap(self):
         self.red = self.red[::-1]
 
-        self.pos = np.where(self.pos < Board.MAX_IDX, Board.MAX_IDX-self.pos-1, self.pos)
+        idx = self.pos < Board.MAX_IDX
+        self.pos[idx] = Board.MAX_IDX - self.pos[idx] - 1
         self.pos = self.pos[::-1]
 
         self.taken = self.taken[::-1]
@@ -53,13 +56,13 @@ class Board:
     def state(self):
         channels = 3
         pos = self.pos
-        red = self.red
-        taken = self.taken
+        red = self.red[0]
+        on_board = (~self.taken) & (self.pos != Board.ESCAPED)
 
         board = np.zeros([channels, Board.MAX_IDX])
-        board[0][pos[0][~red[0] & ~taken[0]]] = 1
-        board[1][pos[0][red[0] & ~taken[0]]] = 1
-        board[2][pos[1][~taken[1]]] = 1
+        board[0][pos[0][on_board[0] & ~red]] = 1
+        board[1][pos[0][on_board[0] & red]] = 1
+        board[2][pos[1][on_board[1]]] = 1
         board = board.reshape(channels, Board.WIDTH, Board.WIDTH)
 
         n_taken = self.n_taken.reshape(-1).copy()
@@ -70,26 +73,43 @@ class Board:
         ally = self.pos[0]
         edge = Board.WIDTH - 1
 
-        moved = ~np.isin(ally + self.direction, ally)
+        no_stack = ~np.isin(ally + self.direction, ally)
         on_board = ((
             ally // Board.WIDTH > 0,
             ally % Board.WIDTH > 0,
             ally % Board.WIDTH < edge,
             ally // Board.WIDTH < edge))
 
-        can_move = moved & on_board & ~self.taken[0]
+        can_move = no_stack & on_board & ~self.taken[0]
 
         # if can goal
-        can_move[0] |= (ally == 0) | (ally == edge) & ~self.red[0]
+        can_move[0] |= ((ally == 0) | (ally == edge)) & ~self.red[0]
+
+        move_i = ally*4 + ((0,),(1,),(2,),(3,),)
         
-        print(can_move)
+        return move_i[can_move]
 
 
     def move(self, move_i):
-        pass
+        now_pos, move = move_i // 4, move_i % 4
+        moved_pos = now_pos + self.direction[move][0]
+
+        moved_pos = Board.ESCAPED if moved_pos in Board.GOAL else moved_pos
+
+        self.pos[self.pos == now_pos] = moved_pos
+
+        taken = self.pos[1] == moved_pos
+
+        if taken.any():
+            self.pos[1][taken] = Board.TOMB
+            self.taken[1] |= taken
+            self.n_taken[1][int(self.red[1][taken])] += 1
+
 
     def game_over(self):
-        return False
+        have_escaped = (self.pos == Board.ESCAPED).any()
+        all_taken = (self.n_taken == 4).any()
+        return have_escaped or all_taken
 
 
     def disp(self):
@@ -101,15 +121,13 @@ class Board:
 
 if __name__ == '__main__':
     red = [0, 1, 2, 3, 8, 9, 10, 11]
-    pos = [00, 24, 34, 44, 15, 25, 35, 50,
+    pos = [00, 24, 33, 44, 15, 25, 35, 50,
             55, 31, 21, 11, 40, 30, 20, 5]
 
     b = Board(red, pos)
     b.disp()
 
-    b.legal_move_index()
-
-    b.swap()
+    b.move(20)
     b.disp()
-    b.legal_move_index()
+
 
