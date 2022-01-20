@@ -22,13 +22,12 @@ class Board:
             (+Board.WIDTH,))
 
         # Blue: False, Red: True; [[A,...,H], [a,...,h]]
-        self.red = np.zeros(PLAYER_NUM * PIECE_NUM, dtype=bool)
-        self.red[red] = True
-        self.red = self.red.reshape(PLAYER_NUM, PIECE_NUM)
+        self.red = np.zeros((PLAYER_NUM, PIECE_NUM), dtype=bool)
+        self.red[0][red[0]] = True
+        self.red[1][red[1]] = True
 
         # 0-35 index; [[A,...,H], [a,...,h]]
         self.pos = self.toindex(np.array(pos, dtype=np.int16))
-        self.pos = self.pos.reshape(PLAYER_NUM, PIECE_NUM)
 
         # was taken; Bool; [[A,...,H],[a,...,h]
         self.taken = self.pos == Board.TOMB
@@ -39,8 +38,12 @@ class Board:
         self.n_taken = np.count_nonzero((b[:t],r[:t],b[t:],r[t:]), axis=1)
         self.n_taken = self.n_taken.reshape(PLAYER_NUM, COLOR_NUM)
 
+        self.have_escaped = False
+        self.all_taken = False
+
     def toindex(self, p):
         return (p % 10) * Board.WIDTH + p // 10
+
 
     def swap(self):
         self.red = self.red[::-1]
@@ -53,13 +56,14 @@ class Board:
 
         self.n_taken = self.n_taken[::-1]
 
+
     def state(self):
         channels = 3
         pos = self.pos
         red = self.red[0]
         on_board = (~self.taken) & (self.pos != Board.ESCAPED)
 
-        board = np.zeros([channels, Board.MAX_IDX])
+        board = np.zeros([channels, Board.MAX_IDX], np.int16)
         board[0][pos[0][on_board[0] & ~red]] = 1
         board[1][pos[0][on_board[0] & red]] = 1
         board[2][pos[1][on_board[1]]] = 1
@@ -69,7 +73,7 @@ class Board:
         return board, n_taken
 
 
-    def legal_move_index(self):
+    def get_next_act(self):
         ally = self.pos[0]
         edge = Board.WIDTH - 1
 
@@ -85,16 +89,17 @@ class Board:
         # if can goal
         can_move[0] |= ((ally == 0) | (ally == edge)) & ~self.red[0]
 
-        move_i = ally*4 + ((0,),(1,),(2,),(3,),)
+        act = ally*4 + ((0,),(1,),(2,),(3,),)
         
-        return move_i[can_move]
+        return act[can_move]
 
 
-    def move(self, move_i):
-        now_pos, move = move_i // 4, move_i % 4
+    def move(self, act_i):
+        now_pos, move = act_i // 4, act_i % 4
         moved_pos = now_pos + self.direction[move][0]
 
-        moved_pos = Board.ESCAPED if moved_pos in Board.GOAL else moved_pos
+        if moved_pos in Board.GOAL:
+            moved_pos = Board.ESCAPED
 
         self.pos[self.pos == now_pos] = moved_pos
 
@@ -103,31 +108,43 @@ class Board:
         if taken.any():
             self.pos[1][taken] = Board.TOMB
             self.taken[1] |= taken
-            self.n_taken[1][int(self.red[1][taken])] += 1
+
+            color = int(self.red[1][taken])
+            self.n_taken[1][color] += 1
 
 
     def game_over(self):
-        have_escaped = (self.pos == Board.ESCAPED).any()
-        all_taken = (self.n_taken == 4).any()
-        return have_escaped or all_taken
+        self.have_escaped = (self.pos == Board.ESCAPED).any()
+        self.all_taken = (self.n_taken == 4).any()
+        return self.have_escaped or self.all_taken
+
+
+    # 0: now_player
+    def get_winner(self):
+        if self.have_escaped:
+            return int((self.pos[1] == Board.ESCAPED).any())
+        if self.all_taken:
+            return int((self.n_taken[(0, 1),(0, 1)] == 4).any())
+        return None
 
 
     def disp(self):
         print('Red:\n', self.red)
         print('Position:\n', self.pos)
         print('Taken:\n', self.taken)
+        print('Winner:\n', self.get_winner())
         print('Board:\n', *self.state())
 
 
 if __name__ == '__main__':
-    red = [0, 1, 2, 3, 8, 9, 10, 11]
-    pos = [00, 24, 33, 44, 15, 25, 35, 50,
-            55, 31, 21, 11, 40, 30, 20, 5]
+    red = [[0, 1, 2, 3] ,[0, 1, 2, 4]]
+    pos = [[14, 24, 33, 44, 15, 25, 35, 50],
+           [55, 31, 21, 11, 40, 30, 20, 5]]
 
     b = Board(red, pos)
-    b.disp()
 
-    b.move(20)
-    b.disp()
+    while not b.game_over():
+        b.move(b.get_next_act()[0])
 
+    b.disp()
 
