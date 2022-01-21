@@ -1,5 +1,4 @@
 import numpy as np
-from numba import jit
 
 
 class Board:
@@ -74,7 +73,6 @@ class Board:
         return board, n_taken
 
 
-    @jit
     def get_next_act(self):
         ally = self.pos[0]
         edge = Board.WIDTH - 1
