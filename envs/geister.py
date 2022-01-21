@@ -1,5 +1,5 @@
 import numpy as np
-from board import Board
+from .board import Board
 
 
 class Geister:
