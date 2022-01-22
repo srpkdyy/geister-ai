@@ -1,10 +1,10 @@
 import random
 
-from .base_agent import BaseAgent
+from ..base_agent import BaseAgent
 
 
 
-class RandomAgent(BaseAgent):
+class Random(BaseAgent):
     def __init__(self):
         super().__init__()
 

@@ -45,15 +45,17 @@ class Geister:
         else:
             self._change_side()
 
-        return self.board.state(), self.done
+        return self.board.state()
 
 
     def render(self):
-        print('Turn: '+str(self.turn), 'DONE: '+str(self.done))
+        s = []
+        s.append('Turn: '+str(self.turn), 'DONE: '+str(self.done))
         board, taken = self.board.state()
-        print('Taken: B:{} R:{} b:{} r:{}'.format(*taken))
-        print('Escaped: '+str(self.board.have_escaped))
-        print(board[0] | board[1]*2 | board[2]*-1)
+        s.append('Taken: B:{} R:{} b:{} r:{}'.format(*taken))
+        s.append('Escaped: '+str(self.board.have_escaped))
+        s.append(board[0] | board[1]*2 | board[2]*-1)
+        return '\n'.join(s)
 
     
     def get_legal_actions(self):
