@@ -5,7 +5,7 @@ from ..base_agent import BaseAgent
 
 
 class Random(BaseAgent):
-    def __init__(self):
+    def __init__(self, seed=None):
         super().__init__()
 
 
@@ -13,6 +13,6 @@ class Random(BaseAgent):
         return random.sample(range(8), 4)
 
 
-    def get_policy(self, state, legal_act):
+    def get_action(self, state, legal_act):
         return random.choice(legal_act)
 
