@@ -30,8 +30,13 @@ public:
    pybind11::array_t<float> update(const std::string& state);
    pybind11::array_t<float> step(const int action);
    std::string render() const;
+
    inline auto getLegalActions() const {
       return board.getLegalActions();
+   }
+
+   inline auto makeState() const {
+      return board.makeState();
    }
 };
 
