@@ -136,3 +136,16 @@ bool CBoard::gameOver() {
    return false;
 }
 
+
+string CBoard::makeState() const {
+   stringstream ss;
+   for (int p = 0; p < PlayerNum; p++) {
+      for (const Unit& u: units[p]) {
+         ss << u.x << u.y;
+         if (u.c == Red) ss << 'R';
+         else ss << 'B';
+      }
+   }
+   return ss.str();
+}
+
