@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <pybind11/numpy.h>
 
 
 enum Player {
@@ -52,18 +53,21 @@ private:
   }
 
 public:
-  using Plane = std::array<std::array<float, Width>, Width>;
-  
+  static constexpr int ObservationSize = 19 * Width * Width;
+  static constexpr std::array<int, 3> ObservationShape{19, Width, Width};
+
   int winner;
 
   CBoard(const std::string&);
-
-  std::array<Plane, 19> observe() const;
+  pybind11::array_t<float> observe() const;
   std::vector<int> getLegalActions() const;
   void moveUnit(const int);
   void swap();
   bool gameOver();
-  std::string render() const;
+  
+  inline const auto& getTakenCnt() const {
+     return takenCnt;
+  }
 };
 
 

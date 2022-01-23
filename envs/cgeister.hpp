@@ -20,17 +20,15 @@ private:
    }
 
 public:
-   using Observation = std::array<CBoard::Plane, 19>;
-
    int turn;
    int winner;
    bool done;
 
    CGeister();
 
-   Observation reset(const std::array<int, 4> red0, const std::array<int, 4> red1);
-   Observation update(const std::string& state);
-   Observation step(const int action);
+   pybind11::array_t<float> reset(const std::array<int, 4> red0, const std::array<int, 4> red1);
+   pybind11::array_t<float> update(const std::string& state);
+   pybind11::array_t<float> step(const int action);
    std::string render() const;
    inline auto getLegalActions() const {
       return board.getLegalActions();
