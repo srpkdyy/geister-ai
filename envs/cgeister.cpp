@@ -5,6 +5,7 @@
 #include "cgeister.hpp"
 
 
+namespace py = pybind11;
 using namespace std;
 
 
@@ -16,7 +17,7 @@ CGeister::CGeister()
     done(false) {}
 
 
-CGeister::Observation CGeister::reset(const array<int, 4> red0, const array<int, 4> red1) {
+py::array_t<float> CGeister::reset(const array<int, 4> red0, const array<int, 4> red1) {
    nextPlayer = turn = 0;
    winner = -1;
    done = false;
@@ -32,7 +33,7 @@ CGeister::Observation CGeister::reset(const array<int, 4> red0, const array<int,
 }
 
 
-CGeister::Observation CGeister::update(const string& state) {
+py::array_t<float> CGeister::update(const string& state) {
    nextPlayer = turn = 0;
    winner = -1;
    done = false;
@@ -41,7 +42,7 @@ CGeister::Observation CGeister::update(const string& state) {
 }
 
 
-CGeister::Observation CGeister::step(const int action) {
+py::array_t<float> CGeister::step(const int action) {
    turn++;
    board.moveUnit(action);
 
@@ -58,9 +59,28 @@ CGeister::Observation CGeister::step(const int action) {
 
 
 string CGeister::render() const {
+   auto obsv = board.observe();
+
    stringstream ss;
-   ss << "Turn: " << turn << " Done: " << done << endl;
-   ss << board.render() << endl;
+   ss << "Turn: " << turn << " Done: " << done << " Winner: " << winner << endl;
+
+   ss << "Board: \n";
+   for (int h = 0; h < CBoard::ObservationShape[1]; h++) {
+      for (int p = 0; p < 3; p++) {
+         for (int w = 0; w < CBoard::ObservationShape[2]; w++) {
+            ss << *obsv.data(p, h, w);
+         }
+         ss << " ";
+      }
+      ss << endl;
+   }
+
+   ss << "Taken: R B r b\n       ";
+   const auto& cnt = board.getTakenCnt();
+   for (const auto& p: cnt)
+      for (const auto& n: p)
+         ss << n << " ";
+   ss << endl;
    return ss.str();
 }
 

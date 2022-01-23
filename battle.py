@@ -24,7 +24,7 @@ def battle(env, agent0, agent1):
 
 
 if __name__ == '__main__':
-    n = 10000
+    n = 100000
     #env = Geister()
     env = CGeister()
     agent0 = Random()
@@ -36,6 +36,7 @@ if __name__ == '__main__':
         r, t =  battle(env, agent0, agent1)
         rate += r
         turn.append(t)
+    print(env.render())
 
     print(1 - rate/n)
     turn = np.array(turn)

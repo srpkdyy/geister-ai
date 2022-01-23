@@ -2,9 +2,11 @@
 #include <vector>
 #include <array>
 #include <sstream>
+#include <pybind11/numpy.h>
 #include "cboard.hpp"
 
 
+namespace py = pybind11;
 using namespace std;
 
 
@@ -27,15 +29,18 @@ CBoard::CBoard(const string& state) : takenCnt{}, winner{-1} {
 }
 
 
-array<CBoard::Plane, 19> CBoard::observe() const {
-   array<CBoard::Plane, 19> state{};
+py::array_t<float> CBoard::observe() const {
+   py::array_t<float> obsv{ObservationShape};
+
+   auto begin = obsv.mutable_data(0, 0, 0);
+   fill(begin, begin + ObservationSize, 0.0f);
 
    // Board
    for (int p = 0; p < PlayerNum; p++) {
       for (const Unit& u: units[p]) {
          if (!onBoard(u.x, u.y)) continue;
          int idx = (p == Ally)? u.c : 2;
-         state[idx][u.y][u.x] = 1.0f;
+         *obsv.mutable_data(idx, u.y, u.x) = 1.0f;
       }
    }
 
@@ -46,10 +51,11 @@ array<CBoard::Plane, 19> CBoard::observe() const {
          if (n == 4) continue;
 
          int idx = p*8 + i*4 + n;
-         for (int h = 0; h < Width; h++) state[3 + idx][h].fill(1.0f);
+         auto begin = obsv.mutable_data(idx + 3, 0, 0);
+         fill(begin, begin + ObservationSize/ObservationShape[0], 1.0f);
       }
    }
-   return state;
+   return obsv;
 }
    
 
@@ -128,38 +134,5 @@ bool CBoard::gameOver() {
       }
    }
    return false;
-}
-
-
-string CBoard::render() const {
-   array<CBoard::Plane, 3> state{};
-   // Board
-   for (int p = 0; p < PlayerNum; p++) {
-      for (const Unit& u: units[p]) {
-         if (!onBoard(u.x, u.y)) continue;
-         int idx = (p == Ally)? u.c : 2;
-         state[idx][u.y][u.x] = 1.0f;
-      }
-   }
-
-   // to string
-   stringstream ss;
-   
-   ss << "Board: \n";
-   for (int h = 0; h < Width; h++) {
-      for (int p = 0; p < 3; p++) {
-         for (int w = 0; w < Width; w++) {
-            ss << state[p][h][w];
-         }
-         ss << " ";
-      }
-      ss << endl;
-   }
-
-   ss << "Taken: \nR B r b\n";
-   for (const auto& p: takenCnt)
-      for (const auto& n: p)
-         ss << n << " ";
-   return ss.str();
 }
 
