@@ -1,3 +1,4 @@
+import os
 import random
 import torch
 import torch.nn as nn
@@ -14,6 +15,7 @@ from battle import play, self_play_history
 
 
 def run(epochs=1000, weight=None, plays=50, trains=100, save_interval=100):
+    os.mkdir('./weights/dqn', exist_ok=True)
 
     kwargs = {
         'batch_size': 128,
