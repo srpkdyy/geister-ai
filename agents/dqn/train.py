@@ -1,40 +1,49 @@
 import random
+import torch
+import torch.nn as nn
+import torch.optim as optim
 from tqdm import tqdm
 from collections import deque
-from agent import Greedy
+from .dqn import DQN
+from .agent import Greedy
 from ...envs.cgeister import cGeister
 from ...battle import battle
 
 
-class Memory():
-    def __init__(self, size):
-        self.buffer = dqeue(maxlen=size)
 
+def run(weight=None):
+    epochs = 1000000
+    batch_size = 128
+    
+    policy_net = DQN().device('cuda:0')
+    target_net = DQN().device('cuda:0')
+    target_net.load_state_dict(policy_net.state_dict())
+    policy_net.train()
+    target_net.eval()
 
-    def add(self, experience):
-        self.buffer.append(experience)
-
-
-    def sample(self, batchsize):
-        idx = random.sample(range(len(self.buffer)), batchsize)
-        return [self.buffer[i] for i in idx]
-
-
-    def __len__(self):
-        return len(self.buffer)
-
-
-def train(episodes):
+    criterion = nn.SmoothL1Loss().to('cuda:0')
+    optimizer = optim.AdamW(policy_net.parameters())
+    
     env = cGeister()
 
-    for _ in tqdm(range(episodes)):
-        main = Greedy('weights/?.pth', eps=eps)
-        target = Greedy('weights/?.pth', eps=eps)
+    for epoch in tqdm(range(epochs)):
+        eps = schedule_eps(epoch, 0.05, 1.0, epochs//2)
+        agent = Greedy(target_net, eps=eps)
 
-        history = battle_history(env, main, target, 150)
+        history = []
+        for _ in range(50):
+            history.extend(battle.self_play_history(env, agent, 180))
+        Dataset(history)
+        DataLoader(Dataset)
+
+        if epoch % 100:
+            torch.save(target_net.state_dict(), 'weights/dqn/latest.pth')
         
 
+def schedule_eps(i, e_min, e_max, t):
+    return max(e_min, e_max * (1 - i/t))
 
-def _train(eps):
-    pass
+
+def train(model, dataloader, creterion, optimizer):
+
 

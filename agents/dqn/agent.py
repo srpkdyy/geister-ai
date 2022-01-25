@@ -10,15 +10,15 @@ class Greedy(BaseAgent):
 
         if isinstance(model, DQN):
             self.model = model
+            self.device = model.device()
         else:
             self.model = DQN()
             self.model.load_state_dict(torch.load('./weights/dqn/' + model))
+            self.device = torch.device('cuda' if use_cuda and torch.cuda.is_available() else 'cpu')
+            self.model.to(self.device)
 
         self.eps = eps
         self.rnd = random.Random(seed)
-        self.device = torch.device('cuda' if use_cuda and torch.cuda.is_available() else 'cpu')
-
-        self.model.to(self.device)
         self.model.eval()
 
 
@@ -38,8 +38,8 @@ class Greedy(BaseAgent):
     def get_value(self, observe):
         with torch.no_grad():
             s = torch.Tensor(observe).pin_memory()
-            s = s.unsqueeze(0).to(self.device, non_blocking=True)
+            s = s.to(self.device, non_blocking=True)
             value = self.model.forward(s)
-            value = value.cpu().detach().clone().squeeze(0).numpy()
+            value = value.detach().clone().squeeze(0)
         return value
 
