@@ -1,44 +1,64 @@
-import numpy as np
-from tqdm import tqdm
-from envs.geister import Geister
-from envs.cgeister import CGeister
-from agents.random.agent import Random
 
-def battle(env, agent0, agent1):
+def play(env, agent0, agent1, turn):
     state = env.reset(agent0.init_red(), agent1.init_red())
-
     agents = [agent0, agent1]
 
     p = 0
-    while not env.done:
+    for i in range(turn):
         legal_act = env.get_legal_actions()
-
-        act = agents[p].get_policy(state, legal_act)
-
+        act = agents[p].get_action(state, legal_act)
         state = env.step(act)
-
         p ^= 1
 
-    return env.winner, env.turn
+        if env.done:
+            return 1 if env.winner == 0 else -1
+    return 0
+
+
+def self_play_history(env, agent, turn):
+    state = env.reset(agent.init_red(), agent.init_red())
+
+    r = 0
+    history = []
+    legal_act = env.get_legal_actions()
+    for i in range(turn):
+        action = agent.get_action(state, legal_act)
+
+        history.append([state, action, 0, None, None])
+
+        state = env.step(action)
+        history[i][-2] = state
+
+        legal_act = env.get_legal_actions()
+        history[i][-1] = legal_act
+
+        if env.done:
+            r = 1 if env.winner == 0 else -1
+            break
+
+    # last step is second player
+    r = -r if i % 2 else r
+
+    history[-1][2] = r
+    history[-2][2] = -r
+    return history
+
 
 
 
 if __name__ == '__main__':
-    n = 100000
-    #env = Geister()
-    env = CGeister()
-    agent0 = Random()
-    agent1 = Random()
+    from tqdm import tqdm
+    from concurrent.futures.thread import ThreadPoolExecutor
+    from envs.cgeister import cGeister
+    from agents.random.agent import Random
+    from agents.dqn.agent import Greedy
+    n = 100
+    env = cGeister()
+    agent = Greedy('head.pth', seed=42)
 
     rate = 0
-    turn = []
     for _ in tqdm(range(n)):
-        r, t =  battle(env, agent0, agent1)
-        rate += r
-        turn.append(t)
-    print(env.render())
+        h = self_play_history(env, agent, 180)
 
-    print(1 - rate/n)
-    turn = np.array(turn)
-    print(turn.min(), turn.mean(), turn.max())
+    print('rate: ', rate)
 

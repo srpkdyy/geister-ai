@@ -50,9 +50,8 @@ py::array_t<float> CGeister::step(const int action) {
       winner = nextPlayer ^ board.winner;
       done = true;
    }
-   else {
-      changeSide();
-   }
+
+   changeSide();
 
    return board.observe();
 }
