@@ -82,5 +82,5 @@ if __name__ == '__main__':
         model,
         input_size=(20, 19, 6, 6),
         col_names=['input_size', 'output_size', 'num_params'])
-    torch.save(model.state_dict(), '../../weights/dqn/head.pth')
+#    torch.save(model.state_dict(), '../../weights/dqn/head.pth')
 

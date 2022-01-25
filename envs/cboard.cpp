@@ -32,7 +32,7 @@ CBoard::CBoard(const string& state) : takenCnt{}, winner{-1} {
 py::array_t<float> CBoard::observe() const {
    py::array_t<float> obsv{ObservationShape};
 
-   auto begin = obsv.mutable_data(0, 0, 0, 0);
+   auto begin = obsv.mutable_data(0, 0, 0);
    fill(begin, begin + ObservationSize, 0.0f);
 
    // Board
@@ -40,7 +40,7 @@ py::array_t<float> CBoard::observe() const {
       for (const Unit& u: units[p]) {
          if (!onBoard(u.x, u.y)) continue;
          int idx = (p == Ally)? u.c : 2;
-         *obsv.mutable_data(0, idx, u.y, u.x) = 1.0f;
+         *obsv.mutable_data(idx, u.y, u.x) = 1.0f;
       }
    }
 
@@ -51,8 +51,8 @@ py::array_t<float> CBoard::observe() const {
          if (n == 4) continue;
 
          int idx = p*8 + i*4 + n;
-         auto begin = obsv.mutable_data(0, idx + 3, 0, 0);
-         fill(begin, begin + ObservationSize/ObservationShape[1], 1.0f);
+         auto begin = obsv.mutable_data(idx + 3, 0, 0);
+         fill(begin, begin + ObservationSize/ObservationShape[0], 1.0f);
       }
    }
    return obsv;

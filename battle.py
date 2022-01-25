@@ -24,7 +24,7 @@ def self_play_history(env, agent, turn):
         legal_act = env.get_legal_actions()
         action = agent.get_action(state, legal_act)
 
-        history.append([state, action, None, None])
+        history.append([state, action, 0, None])
 
         state = env.step(action)
         history[i][-1] = state
