@@ -14,7 +14,7 @@ from battle import play, self_play_history
 
 
 
-def run(epochs=1000, weight=None, plays=50, trains=100, save_interval=100):
+def run(epochs=1000, weight=None, plays=50, trains=10, save_interval=100):
     os.makedirs('./weights/dqn', exist_ok=True)
 
     kwargs = {
