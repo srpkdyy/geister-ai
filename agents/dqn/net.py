@@ -32,11 +32,11 @@ class ResBlock(nn.Module):
 
 
 class DQN(nn.Module):
-    def __init__(self, n_action=144, layers=6):
+    def __init__(self, n_action=144, layers=6, states=1):
         super().__init__()
         self.planes = 256
 
-        self.conv = conv3x3(19, self.planes)
+        self.conv = conv3x3(19 * states, self.planes)
         self.bn = nn.BatchNorm2d(self.planes)
         self.relu = nn.ReLU(inplace=True)
         self.layer = self._make_layer(ResBlock, self.planes, layers)
@@ -82,4 +82,5 @@ if __name__ == '__main__':
         model,
         input_size=(20, 19, 6, 6),
         col_names=['input_size', 'output_size', 'num_params'])
+    torch.save(model.state_dict(), '../../weights/dqn/head.pth')
 

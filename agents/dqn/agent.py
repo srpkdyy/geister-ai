@@ -1,23 +1,25 @@
 import torch
+import random
 from ..base_agent import BaseAgent
+from .net import DQN
 
 
 class Greedy(BaseAgent):
-    def __init__(self, model, eps=0, seed=None):
+    def __init__(self, model, eps=0, use_cuda=True, seed=None):
         super().__init__()
 
-        if isinstnce(model, DualNet):
+        if isinstance(model, DQN):
             self.model = model
         else:
-            self.model = DualNet()
-            self.model.load_state_dict(torch.load(model))
+            self.model = DQN()
+            self.model.load_state_dict(torch.load('./weights/dqn/' + model))
 
         self.eps = eps
         self.rnd = random.Random(seed)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda' if use_cuda and torch.cuda.is_available() else 'cpu')
 
-        self.model.eval()
         self.model.to(self.device)
+        self.model.eval()
 
 
     def init_red(self):
@@ -35,8 +37,9 @@ class Greedy(BaseAgent):
 
     def get_value(self, observe):
         with torch.no_grad():
-            s = torch.Tensor(observe)
-            s = s.unsqueeze(0).to(self.device)
+            s = torch.Tensor(observe).pin_memory()
+            s = s.unsqueeze(0).to(self.device, non_blocking=True)
             value = self.model.forward(s)
-            value = value.cpu().detach().clone().numpy()
+            value = value.cpu().detach().clone().squeeze(0).numpy()
         return value
+

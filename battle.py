@@ -1,9 +1,3 @@
-import numpy as np
-from tqdm import tqdm
-from envs.geister import Geister
-from envs.cgeister import cGeister
-from agents.random.agent import Random
-
 
 def play(env, agent0, agent1, turn):
     state = env.reset(agent0.init_red(), agent1.init_red())
@@ -21,31 +15,26 @@ def play(env, agent0, agent1, turn):
     return 0
 
 
-def play_history(env, agent0, agent1, turn):
-    state = env.reset(agent0.init_red(), agent1.init_red())
-    agents = [agent0, agent1]
+def self_play_history(env, agent, turn):
+    state = env.reset(agent.init_red(), agent.init_red())
 
-    history = []
-
-    p = 0
     r = 0
+    history = []
     for i in range(turn):
         legal_act = env.get_legal_actions()
-        action = agents[p].get_action(state, legal_act)
+        action = agent.get_action(state, legal_act)
 
         history.append([state, action, None, None])
 
         state = env.step(action)
         history[i][-1] = state
 
-        p ^= 1
-
         if env.done:
             r = 1 if env.winner == 0 else -1
             break
 
-    # last step is first player
-    r = r if turn % 2 else -r
+    # last step is second player
+    r = -r if i % 2 else r
 
     history[-1][-2] = r
     history[-2][-2] = -r
@@ -55,14 +44,18 @@ def play_history(env, agent0, agent1, turn):
 
 
 if __name__ == '__main__':
-    n = 1
+    from tqdm import tqdm
+    from concurrent.futures.thread import ThreadPoolExecutor
+    from envs.cgeister import cGeister
+    from agents.random.agent import Random
+    from agents.dqn.agent import Greedy
+    n = 100
     env = cGeister()
-    agent0 = Random()
-    agent1 = Random()
+    agent = Greedy('head.pth', seed=42)
 
     rate = 0
-    turn = []
     for _ in tqdm(range(n)):
-        h = play_history(env, agent0, agent1, 200)
-    print(h)
+        h = self_play_history(env, agent, 180)
+
+    print('rate: ', rate)
 

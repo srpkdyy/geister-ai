@@ -1,7 +1,7 @@
 import random
 from tqdm import tqdm
 from collections import deque
-from .agent import Greedy
+from agent import Greedy
 from ...envs.cgeister import cGeister
 from ...battle import battle
 
@@ -36,7 +36,5 @@ def train(episodes):
 
 
 def _train(eps):
-
-    r = 
-
+    pass
 
