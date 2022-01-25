@@ -20,14 +20,17 @@ def self_play_history(env, agent, turn):
 
     r = 0
     history = []
+    legal_act = env.get_legal_actions()
     for i in range(turn):
-        legal_act = env.get_legal_actions()
         action = agent.get_action(state, legal_act)
 
-        history.append([state, action, 0, None])
+        history.append([state, action, 0, None, None])
 
         state = env.step(action)
-        history[i][-1] = state
+        history[i][-2] = state
+
+        legal_act = env.get_legal_actions()
+        history[i][-1] = legal_act
 
         if env.done:
             r = 1 if env.winner == 0 else -1
@@ -36,8 +39,8 @@ def self_play_history(env, agent, turn):
     # last step is second player
     r = -r if i % 2 else r
 
-    history[-1][-2] = r
-    history[-2][-2] = -r
+    history[-1][2] = r
+    history[-2][2] = -r
     return history
 
 
