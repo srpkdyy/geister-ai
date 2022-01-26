@@ -14,8 +14,11 @@ from battle import play, self_play_history
 
 
 
-def run(epochs=1000, weight=None, plays=50, trains=10, save_interval=100):
+def run(epochs, weight, plays, trains, updates, views, saves):
     os.makedirs('./weights/dqn', exist_ok=True)
+    
+    if saves is None:
+        saves = epochs // 100
 
     kwargs = {
         'batch_size': 128,
@@ -29,20 +32,26 @@ def run(epochs=1000, weight=None, plays=50, trains=10, save_interval=100):
 
     policy_net = DQN().to(device)
     target_net = DQN().to(device)
-    target_net.load_state_dict(policy_net.state_dict())
+
+    if weight is not None:
+        policy_net.load_state_dict(weight)
+
+    weight = policy_net.state_dict()
+    target_net.load_state_dict(weight)
+
     policy_net.train()
     target_net.eval()
 
     criterion = nn.SmoothL1Loss().to(device)
     optimizer = optim.AdamW(policy_net.parameters())
     
-    env = cGeister()
+    env = cGeister
+    agent = Greedy(weight, 'cpu' if torch.cuda.device_count == 1 else 'cuda:1')
     rndm = Random()
 
     for epoch in tqdm(range(epochs)):
         eps = schedule_eps(epoch, 0.1, 0.9, epochs//2)
-
-        agent = Greedy(target_net, eps=eps)
+        agent.eps = eps
 
         history = []
         for _ in range(plays):
@@ -62,17 +71,22 @@ def run(epochs=1000, weight=None, plays=50, trains=10, save_interval=100):
         for _ in range(trains):
             train(policy_net, target_net, dataloader, criterion, optimizer, device)
 
-        target_net.load_state_dict(policy_net.state_dict())
+        weight = policy_net.state_dict()
+        agent.model.load_state_dict(weight)
+        if epoch % updates == 0:
+            target_net.load_state_dict(weight)
 
-        if epoch % save_interval == 0:
-            r = [play(env, Greedy(target_net), rndm, 150) for _ in range(100)]
-            print('vs random, r:{}'.format(sum(r)))
-            torch.save(target_net.state_dict(), 'weights/dqn/{}.pth'.format(epoch))
+        if epoch % views == 0:
+            agent.eps = 0
+            r = [play(env, agent, rndm, 150) for _ in range(100)]
+            s = [0, 0, 0]
+            for rr in r:
+                s[rr] += 1
+            print('vs random, draw:{} win:{} lose:{}'.format(*s))
 
-    r = [play(env, Greedy(target_net), rndm, 150) for _ in range(100)]
-    print('last vs random, r:{}'.format(sum(r)))
-    torch.save(target_net.state_dict(), 'weights/dqn/last.pth')
-        
+        if epoch % saves == 0 or epoch == epochs - 1:
+            torch.save(weight, 'weights/dqn/{}.pth'.format(epoch))
+
 
 def schedule_eps(i, e_min, e_max, t):
     return max(e_min, e_max * (1 - i/t))

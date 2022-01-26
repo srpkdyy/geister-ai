@@ -5,20 +5,18 @@ from .net import DQN
 
 
 class Greedy(BaseAgent):
-    def __init__(self, model, eps=0, use_cuda=True, seed=None):
+    def __init__(self, weight, eps=0, device=torch.device('cpu'), seed=None):
         super().__init__()
 
-        if isinstance(model, DQN):
-            self.model = model
-            self.device = torch.device('cuda' if next(model.parameters()).is_cuda else 'cpu')
-        else:
-            self.model = DQN()
-            self.model.load_state_dict(torch.load('./weights/dqn/' + model))
-            self.device = torch.device('cuda' if use_cuda and torch.cuda.is_available() else 'cpu')
-            self.model.to(self.device)
+        self.model = DQN()
+        self.model.load_state_dict(weight)
+        #self.model.share_memory()
 
         self.eps = eps
+        self.device = device
         self.rnd = random.Random(seed)
+
+        self.model.to(self.device)
         self.model.eval()
 
 
