@@ -46,7 +46,8 @@ def run(epochs, weight, plays, trains, updates, views, saves):
     optimizer = optim.AdamW(policy_net.parameters())
     
     env = cGeister
-    agent = Greedy(weight, 'cpu' if torch.cuda.device_count == 1 else 'cuda:1')
+    adevice = torch.device('cuda:0' if torch.cuda.device_count == 1 else 'cuda:1')
+    agent = Greedy(weight, device=adevice)
     rndm = Random()
 
     for epoch in tqdm(range(epochs)):
