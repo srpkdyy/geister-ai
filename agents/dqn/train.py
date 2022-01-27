@@ -46,7 +46,7 @@ def run(epochs, weight, plays, trains, updates, views, saves):
     optimizer = optim.AdamW(policy_net.parameters())
     
     env = cGeister
-    adevice = torch.device('cuda:0' if torch.cuda.device_count == 1 else 'cuda:1')
+    adevice = torch.device('cuda:0' if torch.cuda.device_count() == 1 else 'cuda:1')
     agent = Greedy(weight, device=adevice)
     rndm = Random()
 
@@ -84,9 +84,10 @@ def run(epochs, weight, plays, trains, updates, views, saves):
             for rr in r:
                 s[rr] += 1
             print('vs random, draw:{} win:{} lose:{}'.format(*s))
+            score = 'd{}w{}l{}'.format(*s)
 
         if epoch % saves == 0 or epoch == epochs - 1:
-            torch.save(weight, 'weights/dqn/{}.pth'.format(epoch))
+            torch.save(weight, 'weights/dqn/{}-{}.pth'.format(epoch, score))
 
 
 def schedule_eps(i, e_min, e_max, t):
