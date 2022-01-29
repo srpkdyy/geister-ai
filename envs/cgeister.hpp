@@ -23,7 +23,7 @@ public:
 
    pybind11::array_t<float> reset(const std::array<int, 4> red0, const std::array<int, 4> red1);
    pybind11::array_t<float> update(const std::string& state);
-   pybind11::array_t<float> step(const int action, bool swap);
+   pybind11::array_t<float> step(const int action, const bool swap);
    std::string render() const;
    
    inline void changeSide() {
@@ -31,7 +31,7 @@ public:
       board.swap();
    }
 
-   inline pybind11::array_t<float> observe() {
+   inline pybind11::array_t<float> observe() const {
       return board.observe();
    }
 

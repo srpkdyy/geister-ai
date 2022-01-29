@@ -27,11 +27,17 @@ def self_play_history(env, agent, turn):
 
         history.append([state, action, 0, None, None])
 
-        state = env.step(action)
+        state = env.step(action, swap=False)
         history[i][-2] = state
+
 
         legal_act = env.get_legal_actions()
         history[i][-1] = legal_act
+
+
+        env._change_side()
+        state = env._observe()
+        legal_act = env.get_legal_actions()
 
         if env.done:
             r = 1 if env.winner == 0 else -1
@@ -45,8 +51,6 @@ def self_play_history(env, agent, turn):
     return history
 
 
-
-
 if __name__ == '__main__':
     import torch
     from tqdm import tqdm
@@ -54,14 +58,16 @@ if __name__ == '__main__':
     from envs.cgeister import cGeister
     from agents.random.agent import Random
     from agents.dqn.agent import Greedy
+
+    env = cGeister
+    rndm = Random()
+    agent = Greedy(torch.load('weights/dqn/49999.pth'))
+
     n = 100
     rate = 0
-    d = torch.device('cpu')
-    rndm = Random(seed=0)
-    agent = Greedy(torch.load('weights/dqn/200.pth'), seed=42, device=d)
+    hist = []
+
     for _ in tqdm(range(n)):
-        ##h = self_play_history(cGeister, agent, 180)
-        rate += play(cGeister, agent, rndm, 180)
+        rate += play(env, agent, rndm, 200)
 
-    print('rate: ', rate)
-
+    print('rate: {}'.format(rate))

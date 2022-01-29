@@ -42,7 +42,7 @@ py::array_t<float> CGeister::update(const string& state) {
 }
 
 
-py::array_t<float> CGeister::step(const int action, bool swap) {
+py::array_t<float> CGeister::step(const int action, const bool swap) {
    turn++;
    board.moveUnit(action);
 

@@ -51,7 +51,7 @@ def run(epochs, weight, plays, trains, updates, views, saves):
     rndm = Random()
 
     for epoch in tqdm(range(epochs)):
-        eps = schedule_eps(epoch, 0.1, 0.9, epochs//2)
+        eps = schedule_eps(epoch, 0.05, 0.9, epochs//2)
         agent.eps = eps
 
         history = []
