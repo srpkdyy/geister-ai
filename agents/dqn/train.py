@@ -90,8 +90,8 @@ def run(epochs, weight, plays, trains, updates, views, saves):
             torch.save(weight, 'weights/dqn/{}-{}.pth'.format(epoch, score))
 
 
-def schedule_eps(i, e_min, e_max, t):
-    return max(e_min, e_max * (1 - i/t))
+def schedule_eps(e, e_min, e_max, t):
+    return max(e_min, e_max * (1 - e/t))
 
 
 def train(pnet, tnet, dataloader, creterion, optimizer, device):
@@ -103,7 +103,7 @@ def train(pnet, tnet, dataloader, creterion, optimizer, device):
         next_legal_actions = next_legal_actions.to(device)
 
         output = pnet(state).gather(1, action)
-        target = -tnet(next_state).gather(1, next_legal_actions).max(1)[0].detach()
+        target = tnet(next_state).gather(1, next_legal_actions).max(1)[0].detach()
 
         is_final = reward != 0
         target[is_final] = reward[is_final]
