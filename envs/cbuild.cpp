@@ -17,6 +17,7 @@ PYBIND11_MODULE(cgeister, m) {
       .def("get_legal_actions", &CGeister::getLegalActions)
       .def("make_state", &CGeister::makeState)
       .def("_change_side", &CGeister::changeSide)
+      .def("_observe", &CGeister::observe)
       .def_readwrite("turn", &CGeister::turn)
       .def_readwrite("winner", &CGeister::winner)
       .def_readwrite("done", &CGeister::done);

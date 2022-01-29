@@ -31,6 +31,10 @@ public:
       board.swap();
    }
 
+   inline pybind11::array_t<float> observe() {
+      return board.observe();
+   }
+
    inline auto getLegalActions() const {
       return board.getLegalActions();
    }
