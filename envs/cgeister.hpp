@@ -14,11 +14,6 @@ private:
    int nextPlayer;
    CBoard board;
 
-   inline void changeSide() {
-      nextPlayer ^= 1;
-      board.swap();
-   }
-
 public:
    int turn;
    int winner;
@@ -28,8 +23,13 @@ public:
 
    pybind11::array_t<float> reset(const std::array<int, 4> red0, const std::array<int, 4> red1);
    pybind11::array_t<float> update(const std::string& state);
-   pybind11::array_t<float> step(const int action);
+   pybind11::array_t<float> step(const int action, bool swap);
    std::string render() const;
+   
+   inline void changeSide() {
+      nextPlayer ^= 1;
+      board.swap();
+   }
 
    inline auto getLegalActions() const {
       return board.getLegalActions();
