@@ -10,8 +10,8 @@ from .net import DQN
 from .agent import Greedy
 from ..random.agent import Random
 from envs.cgeister import cGeister
-from battle import play, self_play_history
-
+from .self_play import self_play_history
+from battle import play
 
 
 def run(epochs, weight, plays, trains, updates, views, saves):
@@ -85,7 +85,7 @@ def run(epochs, weight, plays, trains, updates, views, saves):
             print('vs random, draw:{} win:{} lose:{}'.format(*s))
             score = 'd{}w{}l{}'.format(*s)
 
-        if epoch % saves == 0 or epoch == epochs - 1:
+        if epoch % saves == 0:
             torch.save(weight, 'weights/dqn/{}-{}.pth'.format(epoch, score))
 
 
@@ -102,7 +102,7 @@ def train(pnet, tnet, dataloader, creterion, optimizer, device):
         next_legal_actions = next_legal_actions.to(device)
 
         output = pnet(state).gather(1, action)
-        target = tnet(next_state).gather(1, next_legal_actions).max(1)[0].detach()
+        target = -tnet(next_state).gather(1, next_legal_actions).max(1)[0].detach()
 
         is_final = reward != 0
         target[is_final] = reward[is_final]
