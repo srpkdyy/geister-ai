@@ -50,9 +50,8 @@ def run(epochs, weight, plays, trains, updates, views, saves):
     agent = Greedy(weight, device=adevice)
     rndm = Random()
 
-    for epoch in tqdm(range(epochs)):
-        eps = schedule_eps(epoch, 0.05, 0.9, epochs//2)
-        agent.eps = eps
+    for epoch in tqdm(range(1, epochs + 1)):
+        agent.eps = schedule_eps(epoch, 0.05, 0.9, epochs//2)
 
         history = []
         for _ in range(plays):

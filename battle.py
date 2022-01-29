@@ -18,37 +18,33 @@ def play(env, agent0, agent1, turn):
 def self_play_history(env, agent, turn):
     env = env()
     state = env.reset(agent.init_red(), agent.init_red())
+    legal_act = env.get_legal_actions()
 
     r = 0
-    history = []
-    legal_act = env.get_legal_actions()
+    dummy = [None, None, 0, state, legal_act]
+    history = [dummy]*2
     for i in range(turn):
         action = agent.get_action(state, legal_act)
 
         history.append([state, action, 0, None, None])
 
-        state = env.step(action, swap=False)
-        history[i][-2] = state
-
+        state = env.step(action)
+        history[-2][-2] = state
 
         legal_act = env.get_legal_actions()
-        history[i][-1] = legal_act
-
-
-        env._change_side()
-        state = env._observe()
-        legal_act = env.get_legal_actions()
+        history[-2][-1] = legal_act
 
         if env.done:
             r = 1 if env.winner == 0 else -1
-            break
+            # last step is second player
+            r = -r if i % 2 else r
+        
+            history[-1][2] = r
+            history[-2][2] = -r
+            history[-1][3:] = dummy[3:]
+            return history[2:]
 
-    # last step is second player
-    r = -r if i % 2 else r
-
-    history[-1][2] = r
-    history[-2][2] = -r
-    return history
+    return history[2:-2]
 
 
 if __name__ == '__main__':
@@ -61,13 +57,15 @@ if __name__ == '__main__':
 
     env = cGeister
     rndm = Random()
-    agent = Greedy(torch.load('weights/dqn/49999.pth'))
+    agent = Greedy(torch.load('weights/dqn/49999.pth'), 0.5)
 
-    n = 100
+    n = 10
     rate = 0
     hist = []
 
     for _ in tqdm(range(n)):
-        rate += play(env, agent, rndm, 200)
+        hist.extend(self_play_history(env, rndm, 180))
 
-    print('rate: {}'.format(rate))
+    for i in range(-3, 0):
+        print(hist[i][0], hist[i][1:-2], hist[i][-2], hist[i][-1])
+        print('"""""""""""""""""""""""""""""""""""""""')
