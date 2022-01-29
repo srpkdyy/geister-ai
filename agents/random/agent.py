@@ -16,4 +16,3 @@ class Random(BaseAgent):
 
     def get_action(self, state, legal_act):
         return self.rnd.choice(legal_act)
-
