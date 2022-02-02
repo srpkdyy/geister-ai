@@ -4,8 +4,6 @@
 #include "cboard.hpp"
 
 
-
-
 class CGeister {
 private:
    static constexpr int ActionNum = 144;

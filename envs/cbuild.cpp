@@ -23,3 +23,6 @@ PYBIND11_MODULE(cgeister, m) {
       .def_readwrite("done", &CGeister::done);
 }
 
+PYBIND11_MODULE(simulator, m) {
+   py::class_<
+}
