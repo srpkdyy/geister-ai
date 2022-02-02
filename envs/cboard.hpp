@@ -17,7 +17,8 @@ enum Player {
 enum Color {
   Red,
   Blue,
-  ColorNum
+  ColorNum,
+  Purple
 };
 
 

@@ -17,10 +17,15 @@ CBoard::CBoard(const string& state) : takenCnt{}, winner{-1} {
          int idx = (p*UnitNum + i) * 3;
 
          Unit u;
+
          u.x = int(state[idx] - '0');
          u.y = int(state[idx+1] - '0');
+
          char c = state[idx+2];
-         u.c = (c == 'R' || c == 'r')? Red : Blue;
+         if (c == 'R' || c == 'r') u.c = Red;
+         else if (c == 'B' || c == 'B') u.c = Blue;
+         else u.c = Purple;
+
          units[p][i] = u;
 
          if (u.x == Grave) takenCnt[p][u.c]++;
@@ -39,7 +44,9 @@ py::array_t<float> CBoard::observe() const {
    for (int p = 0; p < PlayerNum; p++) {
       for (const Unit& u: units[p]) {
          if (!onBoard(u.x, u.y)) continue;
-         int idx = (p == Ally)? u.c : 2;
+         int idx;
+         if (p == Enemy) idx = 2;
+         else idx = (u.c == Blue)? Blue : Red;
          *obsv.mutable_data(idx, u.y, u.x) = 1.0f;
       }
    }
@@ -74,8 +81,8 @@ vector<int> CBoard::getLegalActions() const {
          }
       }
 
-      // if unit can escape
-      if (u.y == 0 && (u.x == 0 || u.x == 5) && u.c == Blue) {
+      // if unit can escape. include Purple
+      if (u.y == 0 && (u.x == 0 || u.x == 5) && u.c != Red) {
          legalAct.push_back(u.x * DirectionNum);
       }
    }
@@ -99,7 +106,9 @@ void CBoard::moveUnit(const int action) {
    if (e != -1) {
       Unit& enemy = units[Enemy][e];
       enemy.x = Grave, enemy.y = Grave;
-      takenCnt[Enemy][enemy.c]++;
+      // include Purple into red
+      Color c = (enemy.c == Blue)? Blue: Red;
+      takenCnt[Enemy][c]++;
    }
 }
 
@@ -143,7 +152,8 @@ string CBoard::makeState() const {
       for (const Unit& u: units[p]) {
          ss << u.x << u.y;
          if (u.c == Red) ss << 'R';
-         else ss << 'B';
+         else if (u.c == Blue) ss << 'B';
+         else ss << 'U';
       }
    }
    return ss.str();
