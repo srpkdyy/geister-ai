@@ -146,14 +146,19 @@ bool CBoard::gameOver() {
 }
 
 
-string CBoard::makeState() const {
+string CBoard::makeState(const bool usePurple) const {
    stringstream ss;
    for (int p = 0; p < PlayerNum; p++) {
       for (const Unit& u: units[p]) {
          ss << u.x << u.y;
-         if (u.c == Red) ss << 'R';
-         else if (u.c == Blue) ss << 'B';
-         else ss << 'U';
+
+         char c;
+         if (u.c == Red) c = 'R';
+         else if (u.c == Blue) c = 'B';
+         else c = 'U';
+
+         if (p == Enemy && usePurple) c = 'U';
+         ss << c;
       }
    }
    return ss.str();

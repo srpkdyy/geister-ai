@@ -65,7 +65,7 @@ public:
   void moveUnit(const int);
   void swap();
   bool gameOver();
-  std::string makeState() const;
+  std::string makeState(const bool usePurple) const;
   
   inline const auto& getTakenCnt() const {
      return takenCnt;
