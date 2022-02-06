@@ -39,8 +39,8 @@ public:
       return board.getLegalActions();
    }
 
-   inline auto makeState() const {
-      return board.makeState();
+   inline auto makeState(const bool usePurple) const {
+      return board.makeState(usePurple);
    }
 };
 

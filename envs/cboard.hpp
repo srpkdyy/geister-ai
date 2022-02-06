@@ -17,7 +17,8 @@ enum Player {
 enum Color {
   Red,
   Blue,
-  ColorNum
+  ColorNum,
+  Purple
 };
 
 
@@ -53,8 +54,8 @@ private:
   }
 
 public:
-  static constexpr int ObservationSize = 19 * Width * Width;
-  static constexpr std::array<int, 3> ObservationShape{19, Width, Width};
+  static constexpr int ObservationSize = 20 * Width * Width;
+  static constexpr std::array<int, 3> ObservationShape{20, Width, Width};
 
   int winner;
 
@@ -64,7 +65,7 @@ public:
   void moveUnit(const int);
   void swap();
   bool gameOver();
-  std::string makeState() const;
+  std::string makeState(const bool usePurple) const;
   
   inline const auto& getTakenCnt() const {
      return takenCnt;

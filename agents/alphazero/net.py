@@ -31,12 +31,12 @@ class ResBlock(nn.Module):
         return out
 
 
-class DualNet(nn.Module):
+class DualDQN(nn.Module):
     def __init__(self, n_action=144, layers=6):
         super().__init__()
         self.planes = 256
 
-        self.conv = conv3x3(19, self.planes)
+        self.conv = conv3x3(20, self.planes)
         self.bn = nn.BatchNorm2d(self.planes)
         self.relu = nn.ReLU(inplace=True)
         self.layer = self._make_layer(ResBlock, self.planes, layers)
@@ -50,6 +50,7 @@ class DualNet(nn.Module):
         self.bn_v = nn.BatchNorm2d(1)
         self.relu_v = nn.ReLU(inplace=True)
         self.value = nn.Linear(36, 1)
+        self.tanh = nn.Tanh()
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -82,14 +83,14 @@ class DualNet(nn.Module):
         v = torch.flatten(v, 1)
         value = self.value(v)
 
-        return F.softmax(policy, 1), F.tanh(value)
+        return policy, self.tanh(value)
 
 
 if __name__ == '__main__':
     from torchinfo import summary
-    model = DualNet()
+    model = DualDQN()
     summary(
         model,
-        input_size=(20, 19, 6, 6),
+        input_size=(20, 20, 6, 6),
         col_names=['input_size', 'output_size', 'num_params'])
 

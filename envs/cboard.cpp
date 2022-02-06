@@ -17,13 +17,22 @@ CBoard::CBoard(const string& state) : takenCnt{}, winner{-1} {
          int idx = (p*UnitNum + i) * 3;
 
          Unit u;
+
          u.x = int(state[idx] - '0');
          u.y = int(state[idx+1] - '0');
-         char c = state[idx+2];
-         u.c = (c == 'R' || c == 'r')? Red : Blue;
+
+         char color = state[idx+2];
+         if (color == 'R' || color == 'r') u.c = Red;
+         else if (color == 'B' || color == 'b') u.c = Blue;
+         else u.c = Purple;
+
          units[p][i] = u;
 
-         if (u.x == Grave) takenCnt[p][u.c]++;
+         if (u.x == Grave) {
+            // Purple is counted as Red
+            Color c = (u.c == Blue)? Blue : Red;
+            takenCnt[p][c]++;
+         }
       }
    }
 }
@@ -35,23 +44,27 @@ py::array_t<float> CBoard::observe() const {
    auto begin = obsv.mutable_data(0, 0, 0);
    fill(begin, begin + ObservationSize, 0.0f);
 
-   // Board
+   // Board :4
    for (int p = 0; p < PlayerNum; p++) {
       for (const Unit& u: units[p]) {
          if (!onBoard(u.x, u.y)) continue;
-         int idx = (p == Ally)? u.c : 2;
+
+         int idx;
+         if (p == Enemy) idx = 3;
+         else idx = (u.c == Purple)? 2 : u.c;
+
          *obsv.mutable_data(idx, u.y, u.x) = 1.0f;
       }
    }
 
-   // one-hot planes of taken
+   // one-hot planes of taken :16
    for (int p = 0; p < PlayerNum; p++) {
       for (int i = 0; i < ColorNum; i++) {
          int n = takenCnt[p][i];
          if (n == 4) continue;
 
          int idx = p*8 + i*4 + n;
-         auto begin = obsv.mutable_data(idx + 3, 0, 0);
+         auto begin = obsv.mutable_data(idx + 4, 0, 0);
          fill(begin, begin + ObservationSize/ObservationShape[0], 1.0f);
       }
    }
@@ -74,8 +87,8 @@ vector<int> CBoard::getLegalActions() const {
          }
       }
 
-      // if unit can escape
-      if (u.y == 0 && (u.x == 0 || u.x == 5) && u.c == Blue) {
+      // if unit can escape. (include purple unit)
+      if (u.y == 0 && (u.x == 0 || u.x == 5) && u.c != Red) {
          legalAct.push_back(u.x * DirectionNum);
       }
    }
@@ -99,7 +112,9 @@ void CBoard::moveUnit(const int action) {
    if (e != -1) {
       Unit& enemy = units[Enemy][e];
       enemy.x = Grave, enemy.y = Grave;
-      takenCnt[Enemy][enemy.c]++;
+      // include Purple into red
+      Color c = (enemy.c == Blue)? Blue: Red;
+      takenCnt[Enemy][c]++;
    }
 }
 
@@ -137,13 +152,20 @@ bool CBoard::gameOver() {
 }
 
 
-string CBoard::makeState() const {
+string CBoard::makeState(const bool usePurple) const {
    stringstream ss;
    for (int p = 0; p < PlayerNum; p++) {
       for (const Unit& u: units[p]) {
          ss << u.x << u.y;
-         if (u.c == Red) ss << 'R';
-         else ss << 'B';
+
+         char c;
+         if (u.c == Red) c = 'R';
+         else if (u.c == Blue) c = 'B';
+         else c = 'U';
+
+         if (p == Enemy && usePurple && onBoard(u.x, u.y))
+            c = 'U';
+         ss << c;
       }
    }
    return ss.str();
