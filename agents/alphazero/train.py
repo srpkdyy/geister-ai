@@ -16,7 +16,7 @@ from .utils import eval_network
 
 def run(epochs=1000,
         weight=None,
-        plays=100,
+        plays=50,
         trains=100,
         ds_size=500000,
         saves=None):
@@ -66,9 +66,11 @@ def run(epochs=1000,
         train_net.load_state_dict(weight)
 
         print('Self play:')
-        for _ in tqdm(range(plays//2)):
+        gamma = 3
+        for _ in tqdm(range(plays)):
             dataset.extend(self_play_history(env, best_agent, 180))
             dataset.extend(self_play_history(env, best_agent, 180, all_purple=True))
+            gamma = max(1, gamma - 10/plays)
 
         dataloader = DataLoader(dataset, **kwargs)
 
