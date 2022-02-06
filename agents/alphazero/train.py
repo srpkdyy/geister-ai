@@ -16,14 +16,10 @@ from .utils import eval_network
 
 def run(epochs=1000,
         weight=None,
-        plays=50,
-        trains=100,
-        ds_size=500000,
-        saves=None):
+        plays=150,
+        trains=20,
+        ds_size=500000):
     os.makedirs('./weights/alphazero/', exist_ok=True)
-
-    if saves is None:
-        saves = epochs // 100
 
     kwargs = {
         'batch_size': 128,
@@ -82,8 +78,9 @@ def run(epochs=1000,
 
         print('Eval: {}'.format(r))
         if r > 0:
-            print('Update model')
+            print('Update & save model')
             best_net.load_state_dict(train_net.state_dict())
+            torch.save(best_net.state_dict(), 'weights/alphazero/head.pth')
 
             rs = [battle.play(env, train_agent, rndm, 150) for _ in range(50)]
             rs.extend([-battle.play(env, rndm, train_agent, 150) for _ in range(50)])
@@ -92,8 +89,6 @@ def run(epochs=1000,
                 s[r] += 1
             print('Vs Random, draw:{} win{} lose:{}'.format(*s))
 
-        if epoch % saves == 0:
-            torch.save(best_net.state_dict(), 'weights/alphazero/{}.pth'.format(epoch))
 
 
 def train(epochs, model, dataloader, loss_p, loss_v, optimizer, device):
