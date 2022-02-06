@@ -35,9 +35,9 @@ py::array_t<float> CGeister::reset(const array<int, 4> red0, const array<int, 4>
 
 py::array_t<float> CGeister::update(const string& state) {
    nextPlayer = turn = 0;
-   winner = -1;
-   done = false;
    board = CBoard(state);
+   done = board.gameOver();
+   winner = done? nextPlayer ^ board.winner : -1;
    return board.observe();
 }
 
@@ -65,7 +65,7 @@ string CGeister::render() const {
 
    ss << "Board: \n";
    for (int h = 0; h < CBoard::ObservationShape[1]; h++) {
-      for (int p = 0; p < 3; p++) {
+      for (int p = 0; p < 4; p++) {
          for (int w = 0; w < CBoard::ObservationShape[2]; w++) {
             ss << *obsv.data(p, h, w);
          }

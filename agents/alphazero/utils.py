@@ -1,19 +1,33 @@
-import torch
+def boltzman(policy, gamma):
+    policy = [p ** (1/gamma) for p in policy]
+    s = sum(policy)
+    return [p / s for p in policy]
 
 
-def get_policy_value(observe, model, device):
-    with torch.no_grad():
-        s = torch.Tensor(observe)
-        s = s.unsqueeze(0).to(device)
+def eval_network(battles, env, agent0, agent1):
+    env = env()
+    agents = [agent0, agent1]
 
-        policy, value = model.forward(s)
-        policy = policy.cpu().detach().clone().numpy()
-        value = value.cpu().detach().clone().numpy()
-    return policy, value
+    r = [0] * 2
+    for turn in range(2):
+        for b in range(battles):
+            red = agent0.init_red()
+            env.reset(red, red)
 
+            p = 0
+            for i in range(200):
+                state = env.make_state(True)
+                legal_act = env.get_legal_actions()
+                act = agents[p].get_action(state, legal_act)
 
-def get_legal_policy_value(observe, model, legal_act, device):
-    p, v = get_policy_value(observe, model, device)
-    legal_p = p[legal_act]
-    return legal_p
+                env.step(act)
+                p ^= 1
+
+                if env.done:
+                    r[turn] += 1 if env.winner == 0 else -1
+                    break
+        agents = agents[::-1]
+
+    return r[0] - r[1]
+
 

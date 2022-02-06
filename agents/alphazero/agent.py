@@ -1,80 +1,47 @@
 import random
 import torch
 import numpy as np
-import .utils
 from ..base_agent import BaseAgent
-from .net import DualNet
-from.mcts import MCTS
+from .net import DualDQN
+from .mcts import PV_MCTS
+from .utils import boltzman
 
 
 class AlphaZero(BaseAgent):
-    def __init__(self, model, evaluates=150, temperature=0, seed=None):
+    def __init__(self, weight, evals=150, device=torch.device('cpu'), seed=None):
         super().__init__()
+
+        self.model = DualDQN()
+        self.model.load_state_dict(weight)
+
         
-        if isinstnce(model, DualNet):
-            self.model = model
-        else:
-            self.model = DualNet()
-            self.model.load_state_dict(torch.load(model))
-
-        self.evals = evaluates
-        self.temp = temperature
+        self.device = device
         self.rnd = random.Random(seed)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+        self.model.to(device)
         self.model.eval()
-        self.model.to(self.device)
+
+        self.pv_mcts = PV_MCTS(self.model, evals, 1.0, device)
+
 
     def init_red(self, evaluate=False):
         return self.rnd.sample(range(8), 4)
 
 
-    def get_action(self, env_state, legal_act):
-        s = self.get_policy(env_state, legal_act)
-        return legal_act[s.argmax()]
+    def get_action(self, state, legal_act, gamma=0):
+        policy = self.get_policy(state, gamma)
+        action = self.rnd.choices(legal_act, policy)[0]
+        return action
 
     
-    def get_policy(self, env_state, legal_act):
-        p = MCTS(env_state, self.model, self.evaluates).scores()
-        if self.temp == 0:
-            scores = np.zeros(len(p))
-            scores[p.argmax()] = 1
+    def get_policy(self, state, gamma):
+        scores = self.pv_mcts.get_scores(state)
+
+        if gamma == 0:
+            policy = [0] * len(scores)
+            policy[scores.index(max(scores))] = 1.0
         else:
-            scores = utils.boltzman(p, self.temp)
-        return scores
+            policy = boltzman(scores, gamma)
 
-
-
-class Greedy(BaseAgent):
-    def __init__(self, model, eps=0, seed=None):
-        super().__init__()
-
-        if isinstnce(model, DualNet):
-            self.model = model
-        else:
-            self.model = DualNet()
-            self.model.load_state_dict(torch.load(model))
-
-        self.eps = eps
-        self.rnd = random.Random(seed)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-        self.model.eval()
-        self.model.to(self.device)
-
-
-    def init_red(self):
-        return self.rnd.sample(range(8), 4)
-
-
-    def get_action(self, observe, legal_act, ):
-        s = self.ge
-
-
-    def get_policy(self, observe):
-        with torch.no_grad():
-            s = torch.Tensor(s)
-            s = s.unsqueeze(0).to(self.device)
-
-            policy, _ = self.model.forward(s)
+        return policy
 

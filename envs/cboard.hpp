@@ -54,8 +54,8 @@ private:
   }
 
 public:
-  static constexpr int ObservationSize = 19 * Width * Width;
-  static constexpr std::array<int, 3> ObservationShape{19, Width, Width};
+  static constexpr int ObservationSize = 20 * Width * Width;
+  static constexpr std::array<int, 3> ObservationShape{20, Width, Width};
 
   int winner;
 

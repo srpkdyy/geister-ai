@@ -1,7 +1,13 @@
-import argparse
-from agents.dqn import train
+#import argparse
+#from agents import dqn, alphazero
+from agents.alphazero import train
 
 if __name__ == '__main__':
+
+    train.run()
+
+    '''
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--epochs', type=int, default=100000)
     parser.add_argument('-w', '--weight', type=str)
@@ -19,4 +25,5 @@ if __name__ == '__main__':
             updates=args.updates,
             views=args.views,
             saves=args.saves)
+    '''
 

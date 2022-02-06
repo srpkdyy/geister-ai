@@ -1,54 +1,41 @@
 import os
-import cPickle as pickle
-from datetime import datetime
+import random
+import numpy as np
 from tqdm import tqdm
-from ...envs.cgeister import CGeister
-from .agent import PGreedy
 
 
-SELF_PLAY_NUM = 2000
+def self_play_history(env, agent, turn, gamma=1.0, all_purple=False):
+    env = env()
 
+    if all_purple:
+        obsv = env.update('14U24U34U44U15U25U35U45U41u31u21u11u40u30u20u10u')
+    else:
+        obsv = env.reset(agent.init_red(), agent.init_red())
 
-def self_play(eps=0.3):
-    histories = []
-
-    env = CGeister()
-    agent = PGreedy('./weights/head.pth', eps_greedy=True, eps=eps)
-
-    for i in tqdm(range(SELF_PLAY_NUM)):
-        history = play(env, agent)
-        histories.extend(history)
-
-    save_history(histories)
-
-
-def play(env, agent):
+    r = 0
     history = []
-    
-    state = env.reset(agent.init_red(), agent.init_red())
+    for i in range(turn):
+        state = env.make_state(usePurple=True)
 
-    while not env.done:
         legal_act = env.get_legal_actions()
-        act = agent.get_action(state, legal_act)
+        policy = agent.get_policy(state, gamma)
 
+        all_policy = np.zeros(144)
+        all_policy[legal_act] = policy
 
+        history.append([obsv, all_policy, None])
 
+        act = random.choices(legal_act, policy)[0]
+        obsv = env.step(act)
 
+        if env.done:
+            r = 1 if env.winner == 0 else -1
+            break
 
+    r = np.array([r], dtype=np.float32)
+    for h in history:
+        h[-1] = r
+        r = -r
 
-
-
-def first_player_value(env):
-    if env.done:
-        return 1 if env.winner == 0 else -1
-    return 0
-
-
-def save_history(history):
-    now = datetime.now()
-    os.makedirs('./data', exist_ok=True)
-    path = './data/' + '{:%Y%m%d%H%M%S}'.format(now) + '.history'
-    with open(path, 'wb') as f:
-        pickle.dump(history, f)
-
+    return history
 
