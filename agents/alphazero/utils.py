@@ -26,7 +26,7 @@ def eval_network(battles, env, agent0, agent1, verbose=False):
                     r[turn] += 1 if env.winner == 0 else -1
                     break
 
-    if views:
+    if verbose:
         print('r: {}, {}'.format(*r))
     return r[0] - r[1]
 
