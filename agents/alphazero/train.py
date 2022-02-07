@@ -81,8 +81,8 @@ def run(epochs=1000,
             best_net.load_state_dict(train_net.state_dict())
             torch.save(best_net.state_dict(), 'weights/alphazero/head.pth')
 
-            rs = [utils.play(env, train_agent, rndm, 150, [True, False]) for _ in range(50)]
-            rs.extend([-utils.play(env, rndm, train_agent, 150, [False, True]) for _ in range(50)])
+            rs = [play(env, train_agent, rndm, 150, [True, False]) for _ in range(50)]
+            rs.extend([-play(env, rndm, train_agent, 150, [False, True]) for _ in range(50)])
             s = [0] * 3
             for r in rs:
                 s[r] += 1
