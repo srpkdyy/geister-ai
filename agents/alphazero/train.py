@@ -2,7 +2,6 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import battle
 from tqdm import tqdm
 from collections import deque
 from torch.utils.data import DataLoader
@@ -11,7 +10,7 @@ from envs.cgeister import cGeister
 from .agent import AlphaZero
 from ..random.agent import Random
 from .self_play import self_play_history
-from .utils import eval_network
+from .utils import eval_network, play
 
 
 def run(epochs=1000,
@@ -73,17 +72,17 @@ def run(epochs=1000,
         print('Train:')
         train(trains, train_net, dataloader, loss_p, loss_v, optimizer, device)
 
+        print('Eval: ')
         train_agent.model.load_state_dict(train_net.state_dict())
-        r = eval_network(10, env, train_agent, best_agent)
+        r = eval_network(10, env, train_agent, best_agent, verbose=True)
 
-        print('Eval: {}'.format(r))
-        if r > 0:
-            print('Update & save model')
+        if r >= 0:
+            print('Update & save model: r={}'.format(r))
             best_net.load_state_dict(train_net.state_dict())
             torch.save(best_net.state_dict(), 'weights/alphazero/head.pth')
 
-            rs = [battle.play(env, train_agent, rndm, 150) for _ in range(50)]
-            rs.extend([-battle.play(env, rndm, train_agent, 150) for _ in range(50)])
+            rs = [utils.play(env, train_agent, rndm, 150, [True, False]) for _ in range(50)]
+            rs.extend([-utils.play(env, rndm, train_agent, 150, [False, True]) for _ in range(50)])
             s = [0] * 3
             for r in rs:
                 s[r] += 1

@@ -4,7 +4,7 @@ def boltzman(policy, gamma):
     return [p / s for p in policy]
 
 
-def eval_network(battles, env, agent0, agent1):
+def eval_network(battles, env, agent0, agent1, verbose=False):
     env = env()
     agents = [agent0, agent1]
 
@@ -26,6 +26,27 @@ def eval_network(battles, env, agent0, agent1):
                     r[turn] += 1 if env.winner == 0 else -1
                     break
 
+    if views:
+        print('r: {}, {}'.format(*r))
     return r[0] - r[1]
 
+
+def play(env, agent0, agent1, turn, use_state=[False]*2):
+    env = env()
+    state = env.reset(agent0.init_red(), agent1.init_red())
+    agents = [agent0, agent1]
+
+    p = 0
+    for i in range(turn):
+        if use_state[p]:
+            state = env.make_state(usePurple=True)
+        legal_act = env.get_legal_actions()
+        act = agents[p].get_action(state, legal_act)
+        state = env.step(act)
+        p ^= 1
+
+        if env.done:
+            return 1 if env.winner == 0 else -1
+            
+    return 0
 
