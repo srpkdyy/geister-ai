@@ -11,6 +11,7 @@ private:
    static constexpr int ActionNum = 144;
    static constexpr char InitState[] = "14B24B34B44B15B25B35B45B41B31B21B11B40B30B20B10B";
 
+   const bool openInfo;
    int nextPlayer;
    CBoard board;
 
@@ -19,11 +20,11 @@ public:
    int winner;
    bool done;
 
-   CGeister();
+   CGeister(const bool open);
 
-   pybind11::array_t<float> reset(const std::array<int, 4> red0, const std::array<int, 4> red1);
-   pybind11::array_t<float> update(const std::string& state);
-   pybind11::array_t<float> step(const int action, const bool swap);
+   pybind11::array_t<float> reset(const std::array<int, 4>, const std::array<int, 4>);
+   pybind11::array_t<float> update(const std::string&);
+   pybind11::array_t<float> step(const int, const bool);
    std::string render() const;
    
    inline void changeSide() {

@@ -38,6 +38,7 @@ private:
   static constexpr std::array<int, DirectionNum> dx{0, -1, 1, 0},
                                                  dy{-1, 0, 0, 1};
 
+  bool openInfo;
   std::array<std::array<Unit, UnitNum>, PlayerNum> units;
   std::array<std::array<int, ColorNum>, PlayerNum> takenCnt;
 
@@ -59,13 +60,13 @@ public:
 
   int winner;
 
-  CBoard(const std::string&);
+  CBoard(const std::string&, const bool);
   pybind11::array_t<float> observe() const;
   std::vector<int> getLegalActions() const;
   void moveUnit(const int);
   void swap();
   bool gameOver();
-  std::string makeState(const bool usePurple) const;
+  std::string makeState(const bool) const;
   
   inline const auto& getTakenCnt() const {
      return takenCnt;

@@ -36,7 +36,7 @@ class DQN(nn.Module):
         super().__init__()
         self.planes = 256
 
-        self.conv = conv3x3(19 * states, self.planes)
+        self.conv = conv3x3(22 * states, self.planes)
         self.bn = nn.BatchNorm2d(self.planes)
         self.relu = nn.ReLU(inplace=True)
         self.layer = self._make_layer(ResBlock, self.planes, layers)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     model = DQN()
     summary(
         model,
-        input_size=(20, 19, 6, 6),
+        input_size=(20, 22, 6, 6),
         col_names=['input_size', 'output_size', 'num_params'])
 #    torch.save(model.state_dict(), '../../weights/dqn/head.pth')
 

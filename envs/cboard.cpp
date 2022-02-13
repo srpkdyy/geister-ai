@@ -10,8 +10,9 @@ namespace py = pybind11;
 using namespace std;
 
 
-CBoard::CBoard(const string& state) : takenCnt{}, winner{-1} {
-
+CBoard::CBoard(const string& state, const bool open) :openInfo{open},
+                                                      takenCnt{},
+                                                      winner{-1} {
    for (int p = 0; p < PlayerNum; p++) {
       for (int i = 0; i < CBoard::UnitNum; i++) {
          int idx = (p*UnitNum + i) * 3;
@@ -49,8 +50,12 @@ py::array_t<float> CBoard::observe() const {
       for (const Unit& u: units[p]) {
          if (!onBoard(u.x, u.y)) continue;
 
-         int idx = (u.c == Purple)? 2 : u.c;
-         if (p == Enemy) idx += 3;
+         int idx = (u.c == Purple)? 2: u.c;
+         if (p == Enemy) {
+            idx += 3;
+            if (!openInfo) idx = 5;
+         }
+
 
          *obsv.mutable_data(idx, u.y, u.x) = 1.0f;
       }
