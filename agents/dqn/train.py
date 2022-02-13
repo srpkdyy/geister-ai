@@ -97,15 +97,15 @@ def train(pnet, tnet, dataloader, creterion, optimizer, device):
     for state, action, reward, next_state, next_legal_actions in dataloader:
         state = state.to(device)
         action = action.to(device).reshape(-1, 1)
-        reward = reward.to(device).to(torch.float)
+        reward = reward.to(device)
         next_state = next_state.to(device)
         next_legal_actions = next_legal_actions.to(device)
 
         output = pnet(state).gather(1, action)
         target = -tnet(next_state).gather(1, next_legal_actions).max(1)[0].detach()
 
-        is_final = reward != 0
-        target[is_final] = reward[is_final]
+        not_final = reward == 0
+        target = target * not_final + reward
 
         loss = creterion(output, target.unsqueeze(1))
 
