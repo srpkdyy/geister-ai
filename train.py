@@ -7,8 +7,9 @@ def run(args):
         params = {
             'epochs': 100000,
             'weight': None,
-            'plays': 20,
-            'trains': 10,
+            'plays': 10,
+            'datas': 200000,
+            'trains': 1,
             'updates': 1,
             'views': 100,
             'saves': 1000

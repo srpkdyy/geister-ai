@@ -41,10 +41,15 @@ class DQN(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.layer = self._make_layer(ResBlock, self.planes, layers)
 
-        self.conv_v = nn.Conv2d(self.planes, 8, kernel_size=1)
-        self.bn_v = nn.BatchNorm2d(8)
+        self.conv_a = nn.Conv2d(self.planes, 8, kernel_size=1)
+        self.bn_a = nn.BatchNorm2d(8)
+        self.relu_a = nn.ReLU(inplace=True)
+        self.adv = nn.Linear(36*8, n_action)
+
+        self.conv_v = nn.Conv2d(self.planes, 1, kernel_size=1)
+        self.bn_v = nn.BatchNorm2d(1)
         self.relu_v = nn.ReLU(inplace=True)
-        self.value = nn.Linear(36*8, n_action)
+        self.value = nn.Linear(36, 1)
 
 
         for m in self.modules():
@@ -66,13 +71,19 @@ class DQN(nn.Module):
         out = self.relu(out)
         out = self.layer(out)
 
+        a = self.conv_a(out)
+        a = self.bn_a(a)
+        a = self.relu_a(a)
+        a = torch.flatten(a, 1)
+        adv = self.adv(a)
+
         v = self.conv_v(out)
         v = self.bn_v(v)
         v = self.relu_v(v)
         v = torch.flatten(v, 1)
         value = self.value(v)
 
-        return value
+        return value + adv - torch.mean(adv, dim=1, keepdim=True)
 
 
 if __name__ == '__main__':
