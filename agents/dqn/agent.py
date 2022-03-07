@@ -29,12 +29,13 @@ class Greedy(BaseAgent):
             return self.rnd.choice(legal_act)
 
         with torch.no_grad():
-            s = torch.Tensor(observe).pin_memory()
-            s = s.to(self.device, non_blocking=True).unsqueeze(0)
+            s = torch.tensor(observe, device=self.device).unsqueeze(0)
+            a = torch.tensor(legal_act, device=self.device)
 
-            value = self.model.forward(s)
+            v = self.model(s)
 
-            value = value.detach().clone().squeeze(0)
-            lv = value[legal_act]
-            return legal_act[lv.argmax()]
+            value = v.squeeze(0).gather(0, a)
+            act = a[value.argmax()].item()
+
+        return act
 

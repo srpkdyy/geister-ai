@@ -10,8 +10,9 @@ namespace py = pybind11;
 using namespace std;
 
 
-CBoard::CBoard(const string& state) : takenCnt{}, winner{-1} {
-
+CBoard::CBoard(const string& state, const bool open) :openInfo{open},
+                                                      takenCnt{},
+                                                      winner{-1} {
    for (int p = 0; p < PlayerNum; p++) {
       for (int i = 0; i < CBoard::UnitNum; i++) {
          int idx = (p*UnitNum + i) * 3;
@@ -44,14 +45,17 @@ py::array_t<float> CBoard::observe() const {
    auto begin = obsv.mutable_data(0, 0, 0);
    fill(begin, begin + ObservationSize, 0.0f);
 
-   // Board :4
+   // Board :RBU*playerNum
    for (int p = 0; p < PlayerNum; p++) {
       for (const Unit& u: units[p]) {
          if (!onBoard(u.x, u.y)) continue;
 
-         int idx;
-         if (p == Enemy) idx = 3;
-         else idx = (u.c == Purple)? 2 : u.c;
+         int idx = (u.c == Purple)? 2: u.c;
+         if (p == Enemy) {
+            idx += 3;
+            if (!openInfo) idx = 5;
+         }
+
 
          *obsv.mutable_data(idx, u.y, u.x) = 1.0f;
       }
@@ -64,7 +68,7 @@ py::array_t<float> CBoard::observe() const {
          if (n == 4) continue;
 
          int idx = p*8 + i*4 + n;
-         auto begin = obsv.mutable_data(idx + 4, 0, 0);
+         auto begin = obsv.mutable_data(3*PlayerNum + idx, 0, 0);
          fill(begin, begin + ObservationSize/ObservationShape[0], 1.0f);
       }
    }

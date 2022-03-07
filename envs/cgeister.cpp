@@ -9,9 +9,10 @@ namespace py = pybind11;
 using namespace std;
 
 
-CGeister::CGeister()
-   :nextPlayer(0),
-    board{InitState},
+CGeister::CGeister(const bool open)
+   :openInfo(open),
+    nextPlayer(0),
+    board{InitState, open},
     turn(0),
     winner(-1),
     done(false) {}
@@ -27,7 +28,7 @@ py::array_t<float> CGeister::reset(const array<int, 4> red0, const array<int, 4>
       state[red0[i] * 3 + 2] = 'R';
       state[red1[i] * 3 + 26] = 'R';
    }
-   board = CBoard(state);
+   board = CBoard(state, openInfo);
 
    return board.observe();
 }
@@ -35,7 +36,7 @@ py::array_t<float> CGeister::reset(const array<int, 4> red0, const array<int, 4>
 
 py::array_t<float> CGeister::update(const string& state) {
    nextPlayer = turn = 0;
-   board = CBoard(state);
+   board = CBoard(state, openInfo);
    done = board.gameOver();
    winner = done? nextPlayer ^ board.winner : -1;
    return board.observe();
@@ -64,8 +65,9 @@ string CGeister::render() const {
    ss << "Turn: " << turn << " Done: " << done << " Winner: " << winner << endl;
 
    ss << "Board: \n";
+   ss << "R      B      U      r      b      u\n";
    for (int h = 0; h < CBoard::ObservationShape[1]; h++) {
-      for (int p = 0; p < 4; p++) {
+      for (int p = 0; p < 6; p++) {
          for (int w = 0; w < CBoard::ObservationShape[2]; w++) {
             ss << *obsv.data(p, h, w);
          }

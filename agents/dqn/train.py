@@ -14,7 +14,7 @@ from .self_play import self_play_history
 from battle import play
 
 
-def run(epochs, weight, plays, trains, updates, views, saves):
+def run(epochs, weight, plays, datas, trains, updates, views, saves):
     os.makedirs('./weights/dqn', exist_ok=True)
     
     if saves is None:
@@ -34,7 +34,7 @@ def run(epochs, weight, plays, trains, updates, views, saves):
     target_net = DQN().to(device)
 
     if weight is not None:
-        policy_net.load_state_dict(weight)
+        policy_net.load_state_dict(torch.load(weight))
 
     weight = policy_net.state_dict()
     target_net.load_state_dict(weight)
@@ -50,12 +50,14 @@ def run(epochs, weight, plays, trains, updates, views, saves):
     agent = Greedy(weight, device=adevice)
     rndm = Random()
 
+    dataset = deque([], maxlen=datas)
+
     for epoch in tqdm(range(1, epochs + 1)):
-        agent.eps = schedule_eps(epoch, 0.05, 0.9, epochs//2)
 
         history = []
-        for _ in range(plays):
-            history.extend(self_play_history(env, agent, 180))
+        for i in range(plays):
+            agent.eps = 0.4 ** (1 + (i*7 / (plays-1)))
+            history.extend(self_play_history(env, agent, 200))
 
         with torch.no_grad():
             mask = torch.empty(144, dtype=torch.int64)
@@ -65,8 +67,8 @@ def run(epochs, weight, plays, trains, updates, views, saves):
                 mask[:len(legal_i)] = torch.tensor(legal_i)
                 h[-1] = mask.clone()
 
-
-        dataloader = DataLoader(history, **kwargs)
+        dataset.extend(history)
+        dataloader = DataLoader(dataset, **kwargs)
 
         for _ in range(trains):
             train(policy_net, target_net, dataloader, criterion, optimizer, device)
@@ -97,15 +99,15 @@ def train(pnet, tnet, dataloader, creterion, optimizer, device):
     for state, action, reward, next_state, next_legal_actions in dataloader:
         state = state.to(device)
         action = action.to(device).reshape(-1, 1)
-        reward = reward.to(device).to(torch.float)
+        reward = reward.to(device)
         next_state = next_state.to(device)
         next_legal_actions = next_legal_actions.to(device)
 
         output = pnet(state).gather(1, action)
         target = -tnet(next_state).gather(1, next_legal_actions).max(1)[0].detach()
 
-        is_final = reward != 0
-        target[is_final] = reward[is_final]
+        not_final = reward == 0
+        target = target * not_final + reward
 
         loss = creterion(output, target.unsqueeze(1))
 

@@ -9,7 +9,7 @@ using namespace py::literals;
 
 PYBIND11_MODULE(cgeister, m) {
    py::class_<CGeister>(m, "cGeister")
-      .def(py::init())
+      .def(py::init<const bool>(), "open"_a=false)
       .def("reset", &CGeister::reset)
       .def("update", &CGeister::update)
       .def("step", &CGeister::step,"action"_a=-1, "swap"_a=true)
