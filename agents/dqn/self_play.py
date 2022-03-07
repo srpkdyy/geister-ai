@@ -28,13 +28,10 @@ def self_play_history(env, agent, turn, mode='mix'):
 
         if env.done:
             r = 1 if env.winner == 0 else -1
-            break
+            r = -r if i % 2 else r
+            history[-1][2] = r
+            history[-2][2] = -r
+            return history
 
-    # last step is second player
-    r = -r if i % 2 else r
-        
-    history[-1][2] = r
-    history[-2][2] = -r
-
-    return history
+    return []
 
