@@ -1,4 +1,4 @@
-def self_play_history(env, agent, turn, mode='mix'):
+def self_play_history(env, agent, turn, mode='mix', gamma=0.997):
     env = env(open=True)
 
     if mode == 'normal':
@@ -13,7 +13,6 @@ def self_play_history(env, agent, turn, mode='mix'):
 
     legal_act = env.get_legal_actions()
 
-    r = 0
     history = []
     for i in range(turn):
         action = agent.get_action(state, legal_act)
@@ -29,9 +28,10 @@ def self_play_history(env, agent, turn, mode='mix'):
         if env.done:
             r = 1 if env.winner == 0 else -1
             r = -r if i % 2 else r
-            history[-1][2] = r
-            history[-2][2] = -r
-            return history
 
-    return []
+            for h in history[::-1]:
+                h[2] = r
+                r = -r * gamma
+            return history
+    return history
 
