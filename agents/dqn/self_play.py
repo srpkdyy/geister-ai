@@ -13,9 +13,11 @@ def self_play_history(env, agent, turn, mode='mix'):
 
     legal_act = env.get_legal_actions()
 
+    eps = agent.eps
     r = 0
     history = []
     for i in range(turn):
+        agent.eps = (1 + i%2) * eps
         action = agent.get_action(state, legal_act)
 
         history.append([state, action, 0, None, None])
