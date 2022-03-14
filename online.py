@@ -1,41 +1,54 @@
 import argparse
+import time
 from envs.cgeister import cGeister
 from envs.remote import RemoteEnv
+from agents.wrapper import AgentWrapper
 
 
-if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-h', '--host', type=str, default='localhost')
-    parser.add_argument('-p', '--port', type=int, default=10000)
-    parser.add_argument('-g', '--games', type=int, default=1)
-    parser.add_argument('-a', '--agent', type=str, default='random')
-    parser.add_argument('-w', '--weight', type=str)
-    args = parser.parse_args()
+def main(args):
+    cfg = {}
 
-
+    cfg['env'] = cGeister
 
     if args.agent == 'random':
         from agents.random.agent import Random
-        agent = Random()
+        cfg['arch'] = Random
+        params = {}
+        use_info = ['obsv', 'legal_act']
 
-    env = RemoteEnv(cGeister, args.host, args.port)
-    result = [0, 0, 0]
+    env = RemoteEnv(cfg['env'], args.host, args.port, args.verbose)
+    agent = AgentWrapper(cfg['arch'], params, use_info)
+    results = {}
 
     for i in range(args.games):
-        state = env.reset(agent.init_red())
+        obsv = env.reset(agent.init_red())
 
         while not env.done:
+            state = env.make_state()
             legal_act = env.get_legal_actions()
-            act = agent.get_action(state, legal_act)
 
-            env.render()
-            state = env.step(act)
+            act = agent.get_action(obsv, state, legal_act)
 
-        print('Game {}: {}'.format(i + 1, ['Win', 'Draw', 'Lose'][env.result])) 
-        result[env.result] += 1
+            obsv = env.step(act)
 
-    print('Result ==> Win:{}, Draw:{}, Lose{}'.format(*result))
+        print('Game {}: {}'.format(i + 1, env.result), end='\n'*2) 
+        results[env.result] = results.get(env.result, 0) + 1
+
+        time.sleep(1)
+
+    print('Results ==> {}'.format(results))
 
 
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('host', type=str)
+    parser.add_argument('port', type=int)
+    parser.add_argument('-g', '--games', type=int, default=1)
+    parser.add_argument('-a', '--agent', type=str, default='random')
+    parser.add_argument('-w', '--weight', type=str)
+    parser.add_argument('--verbose', action='store_true')
+
+    main(parser.parse_args())
