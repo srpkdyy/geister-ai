@@ -3,7 +3,6 @@ import random
 from ..base_agent import BaseAgent
 
 
-
 class Random(BaseAgent):
     def __init__(self, seed=None):
         super().__init__()
