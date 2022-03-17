@@ -12,6 +12,6 @@ class P_MCTS(BaseAgent):
 
     def get_action(self, state, legal_act):
         scores = self.mcts.evaluate(state)
-        idx = scores.find(max(scores))
+        idx = scores.index(max(scores))
         return legal_act[idx]
 

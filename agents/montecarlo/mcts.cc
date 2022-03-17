@@ -28,7 +28,7 @@ vector<int> MCTS::evaluate(string state) {
       next.swap();
       auto nextState = next.makeState(false);
 
-      for (int j = 0; j < 1000; j++) {
+      for (int j = 0; j < 10000; j++) {
          scores[i] += -playout(nextState);
       }
    }

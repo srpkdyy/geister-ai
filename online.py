@@ -16,6 +16,11 @@ def main(args):
         cfg['arch'] = Random
         params = {}
         use_info = ['obsv', 'legal_act']
+    elif args.agent == 'mcts':
+        from agents.montecarlo.agent import P_MCTS
+        cfg['arch'] = P_MCTS
+        params = {}
+        use_info = ['state', 'legal_act']
 
     env = RemoteEnv(cfg['env'], args.host, args.port, args.verbose)
     agent = AgentWrapper(cfg['arch'], params, use_info)
