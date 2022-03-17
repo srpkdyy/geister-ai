@@ -21,7 +21,8 @@ class Greedy(BaseAgent):
 
 
     def init_red(self):
-        return self.rnd.sample(range(8), 4)
+        #return self.rnd.sample(range(8), 4)
+        return [0, 1, 2, 3]
 
 
     def get_action(self, observe, legal_act):
