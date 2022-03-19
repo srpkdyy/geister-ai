@@ -1,5 +1,6 @@
 import argparse
 import time
+import torch
 from envs.cgeister import cGeister
 from envs.remote import RemoteEnv
 from agents.wrapper import AgentWrapper
@@ -21,6 +22,11 @@ def main(args):
         cfg['arch'] = P_MCTS
         params = {}
         use_info = ['state', 'legal_act']
+    elif args.agent == 'dqn':
+        from agents.dqn.agent import Greedy
+        cfg['arch'] = Greedy
+        params = {'weight': torch.load(args.weight)}
+        use_info = {'obsv', 'legal_act'}
 
     env = RemoteEnv(cfg['env'], args.host, args.port, args.verbose)
     agent = AgentWrapper(cfg['arch'], params, use_info)

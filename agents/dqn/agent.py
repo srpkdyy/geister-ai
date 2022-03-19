@@ -21,6 +21,7 @@ class Greedy(BaseAgent):
 
 
     def init_red(self):
+        return [0, 1, 2, 3]
         return self.rnd.sample(range(8), 4)
 
 
