@@ -7,17 +7,37 @@
 
 
 using namespace std;
+using namespace std::chrono;
 
 
-MCTS::MCTS(const float calc_ms)
+MCTS::MCTS(const int calc_ms)
    :mt{random_device{}()},
-   allowedCalcMs(calc_ms),
+   allowedCalcMs{calc_ms},
    maxTurn(200){}
 
 
-vector<int> MCTS::evaluate(string state) {
-   auto root = CBoard(state, false);
-   auto legalActions = root.getLegalActions();
+vector<int> MCTS::evaluate(const string& state) {
+   auto root = unique_ptr<Node>(new Node{10, 0, state, {}});
+   auto start = system_clock::now();
+
+   while (system_clock::now() - start < allowedCalcMs) {
+      auto node = root.get();
+      
+      while (node->n >= 10) {
+         if (node->children.empty()) {
+
+         }
+         // 1kai mo otodureteinai
+         // nainara, ucb de max
+         //
+         //
+      }
+
+      result = playout(node
+
+
+   }
+
    auto n = legalActions.size();
 
    vector<int> scores(n);
@@ -33,11 +53,6 @@ vector<int> MCTS::evaluate(string state) {
       }
    }
    return scores;
-}
-
-
-int MCTS::search(const string& state) {
-   return 0;
 }
 
 

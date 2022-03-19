@@ -8,7 +8,7 @@ class P_MCTS(BaseAgent):
         self.mcts = MCTS()
 
     def init_red(self):
-        return [0, 1, 2, 3]
+        return [1, 2, 4, 7]
 
     def get_action(self, state, legal_act):
         scores = self.mcts.evaluate(state)
