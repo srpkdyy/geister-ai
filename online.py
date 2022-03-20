@@ -20,7 +20,7 @@ def main(args):
     elif args.agent == 'mcts':
         from agents.montecarlo.agent import P_MCTS
         cfg['arch'] = P_MCTS
-        params = {}
+        params = {'calc_ms': 9500}
         use_info = ['state', 'legal_act']
     elif args.agent == 'dqn':
         from agents.dqn.agent import Greedy

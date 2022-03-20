@@ -2,6 +2,7 @@
 #include <limits>
 #include <random>
 #include <vector>
+#include <memory>
 #include "cboard.hpp"
 #include "mcts.h"
 
@@ -16,41 +17,67 @@ MCTS::MCTS(const int calc_ms)
    maxTurn(200){}
 
 
-vector<int> MCTS::evaluate(const string& state) {
-   auto root = unique_ptr<Node>(new Node{10, 0, state, {}});
+vector<int> MCTS::evaluate(const string& state, const vector<int>& legalActions) {
+   auto root = unique_ptr<Node>(
+       new Node{100, 0, state, nullptr, {}, {}}
+       );
    auto start = system_clock::now();
 
    while (system_clock::now() - start < allowedCalcMs) {
       auto node = root.get();
       
-      while (node->n >= 10) {
-         if (node->children.empty()) {
-
+      while (node->untriedActions.empty() && !node->children.empty()) {
+         Node* selected = nullptr; 
+         double best = -10000000.0;
+         auto t = 0;
+         for (const auto& mc : node->children) t += mc.second->n;
+         for (const auto& mc : node->children) {
+            const auto& c = mc.second;
+            auto score = -1*(c->w/c->n) + 2*sqrt(2*log(t)/c->n);
+            if (score > best) {
+               best = score;
+               selected = c.get();
+            }
          }
-         // 1kai mo otodureteinai
-         // nainara, ucb de max
-         //
-         //
+         node = selected;
       }
 
-      result = playout(node
+      if (node->children.empty() && node->n >= 100) {
+         auto now = CBoard(node->state, false);
+         if (!now.gameOver()) {
+            auto actions = now.getLegalActions();
+            node->untriedActions = actions;
+            for (const auto& act : actions) {
+               auto next = now;
+               next.moveUnit(act); next.swap();
+               node->children.emplace( 
+                  act, new Node{0, 0, next.makeState(false), node, {}, {}}
+                  );
+            }
+         }
+      }
 
+      if (!node->untriedActions.empty()) {
+         auto act = node->untriedActions[mt() % node->untriedActions.size()];
+         auto itr = node->untriedActions.begin();
+         for(; itr != node->untriedActions.end() && *itr != act; itr++);
+         iter_swap(itr, node->untriedActions.end() - 1);
+         node->untriedActions.resize(node->untriedActions.size() - 1);
+         node = node->children[act].get();
+      }
 
+      auto result = playout(node->state);
+
+      while (node != nullptr) {
+         node->n++; node->w += result;
+         result = -result;
+         node = node->parent;
+      }
    }
 
-   auto n = legalActions.size();
-
-   vector<int> scores(n);
-
-   for (size_t i = 0; i < n; i++) {
-      auto next = root;
-      next.moveUnit(legalActions[i]);
-      next.swap();
-      auto nextState = next.makeState(false);
-
-      for (int j = 0; j < 10000; j++) {
-         scores[i] += -playout(nextState);
-      }
+   vector<int> scores{};
+   for (const auto& a : legalActions) {
+      scores.push_back(root.get()->children[a].get()->n);
    }
    return scores;
 }
